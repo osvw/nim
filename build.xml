@@ -1,0 +1,53 @@
+<project name="nim" default="dist" basedir="." xmlns:if="ant:if">
+
+  <description>Create a zipfile of nim</description>
+
+  <property name="src" location="."/>
+  <property name="build" location="build"/>
+  <property name="dist" location="dist"/>
+  <property name="log" location="logfile.txt"/>
+
+  <target name="init">
+    <echo message="Creating directories."/>
+    <mkdir dir="${build}"/>
+    <copy todir="${build}">
+      <fileset dir="${src}"/>
+    </copy>
+  </target>
+
+  <target name="compile" depends="init" description="Run tests">
+    <echo message="Running and validating unit tests."/>
+    <exec
+        executable="python"
+        output="${log}"
+        resultproperty="unittest_result"
+        failonerror="false"
+        dir="${build}">
+      <arg value="test_nim_unittest.py"/>
+    </exec>
+    <loadfile
+        srcfile="${log}"
+        property="unittest_result_log"
+    />
+    <echo message="${unittest_result_log}"/>
+    <fail message="Unit tests failed, canceling build.">
+        <condition>
+           <contains string="${unittest_result_log}" substring="FAILED"/>
+        </condition>
+    </fail>
+  </target>
+
+  <target name="dist" depends="compile" description="Build zip.">
+    <echo message="Creating dist (zip) file."/>
+    <zip destfile="${dist}/nim.zip" basedir="${src}" excludes="*.pyc"/>
+  </target>
+
+  <target name="clean" description="clean up">
+    <echo message="Cleanup."/>
+    <delete dir="${src}"/>
+    <delete dir="${build}"/>
+    <delete dir="${dist}"/>
+    <delete dir="${log}"/>
+  </target>
+
+</project>
